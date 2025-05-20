@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TimerView: View {
     //180のところをプレイ時間に変える
-    @State private var timeInterval: TimeInterval = 180
+    @State private var timeInterval: TimeInterval = 1800
     @State var isShowAlert = false
     
     private let formatter = TimerFormatter()

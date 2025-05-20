@@ -1,7 +1,7 @@
 import SwiftUI
 struct TimerCircleView: View {
-    // ViewModelをStateObjectで宣言してCircleProgressViewModelを監視できるようにする
     @StateObject var viewModel = TimerCircleViewModel()
+    
     var body: some View {
         ZStack {
             Circle()

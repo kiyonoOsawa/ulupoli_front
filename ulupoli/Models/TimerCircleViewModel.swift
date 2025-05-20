@@ -1,9 +1,10 @@
 import Foundation
 import SwiftUI
 import Combine
-//消すな
+
 final class TimerCircleViewModel: ObservableObject {
     @Published var progressValue: CGFloat = 0.0
+    
     private var timerCount: CGFloat = 0.0
     private var cancellable: AnyCancellable?
     
@@ -21,8 +22,8 @@ final class TimerCircleViewModel: ObservableObject {
     
     private func countProgress() {
         //ここ全部の180もプレイ時間にする
-        if timerCount > 180 { cancellable?.cancel() }
+        if timerCount > 1800 { cancellable?.cancel() }
         timerCount = timerCount + 0.1
-        progressValue = timerCount / 180
+        progressValue = timerCount / 1800
     }
 }
