@@ -8,11 +8,26 @@
 import SwiftUI
 
 struct WaitingView: View {
+    @State var showPlayingSheet: Bool = false
     var body: some View {
-        ZStack {
-            Color.backColor.ignoresSafeArea()
-            Text("Waiting....")
-                .foregroundColor(.white)
+        NavigationStack {
+            ZStack {
+                Color.backColor.ignoresSafeArea()
+                VStack {
+                    Text("Waiting....")
+                        .foregroundColor(.white)
+                    
+                    NavigationLink {
+                        PlayView()
+                    } label: {
+                        Text("開始")
+                            .padding()
+                            .foregroundColor(.white)
+                            .background(Color.blue)
+                            .cornerRadius(12)
+                    }
+                }
+            }
         }
     }
 }

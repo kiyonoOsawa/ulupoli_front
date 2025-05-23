@@ -3,11 +3,12 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         VStack {
-            StartView()
+//            StartView()
 //            MapView()
 //            PlayView()
 //            InputRoomIDView(step: .inputID)
 //            NFCReadView()
+            ChatView()
         }
     }
 }
