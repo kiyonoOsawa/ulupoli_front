@@ -1,10 +1,3 @@
-//
-//  TimerView.swift
-//  ulupoli
-//
-//  Created by 大澤清乃 on 2025/05/18.
-//
-
 import SwiftUI
 
 struct TimerView: View {

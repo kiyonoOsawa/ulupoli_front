@@ -2,14 +2,17 @@ import SwiftUI
 
 struct InputRoomIDView: View {
     
+    @Environment(\.dismiss) var dismiss
     @StateObject var viewModel = PlayerViewModel()
-    @State var step: step
+    
+    var onCompletion: (Bool) -> Void // Trueなら成功、Falseなら中断など
     
     var body: some View {
-        ZStack {
-            VStack(spacing: 24) {
-                switch step {
-                case .inputID:
+        NavigationView {
+            ZStack {
+                Color.grayColor.ignoresSafeArea()
+                //            NavigationStack {
+                VStack(spacing: 24) {
                     TextField("RoomIDを入力", text: $viewModel.roomIDInput)
                         .padding()
                         .frame(width: 360)
@@ -17,48 +20,51 @@ struct InputRoomIDView: View {
                             RoundedRectangle(cornerRadius: 4)
                                 .stroke(Color.mainColor, lineWidth: 2)
                         )
-                case .inputName:
-                    TextField("名前を入力", text: $viewModel.nameInput)
-                        .padding()
-                        .frame(width: 360)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.mainColor, lineWidth: 2)
-                        )
-                case .readNFC:
-                    Button(action: {
-                        print("一旦次")
-                    }, label: {
-                        Text("完了")
-                    })
+                    NavigationLink {
+                        InputNameView(viewModel: viewModel, onCompletion: onCompletion)
+                    } label: {
+                        Text("Next")
+                            .padding()
+                            .frame(width: 360)
+                            .foregroundStyle(.white)
+                            .background(Color.main)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(Color.mainColor, lineWidth: 2)
+                            )
+                    }
                 }
-                Button(action: {
-                    print("たっぷ")
-                    // roomIDの取得や処理など
-                    viewModel.savePlayer()
-                }, label: {
-                    Text("Next")
-                        .padding()
-                        .frame(width: 360)
-                        .foregroundStyle(.white)
-                        .background(Color.main)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.mainColor, lineWidth: 2)
-                        )
-                })
             }
+            // ここを変更: ナビゲーションバーのタイトルを表示
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("閉じる") {
+                        dismiss()
+                        onCompletion(false)
+                    }
+                    .foregroundColor(.white)
+                }
+            }
+            // ここを変更: ナビゲーションバーの背景を表示
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(Color.grayColor, for: .navigationBar)
         }
-        .padding()
+        
+        .presentationDetents([.fraction(0.5), .large])
+        .presentationCornerRadius(20) // シートの角丸を指定（任意）
+        
+        // ここでシート全体の背景を設定
+        .presentationBackground { // ① presentationBackground を使う
+            // あなたの望む「ぼかし/影」の色をここで指定
+            Color.white.opacity(0.6) // ② 例えば、黒の半透明にする
+                .ignoresSafeArea() // 背景がシート全体を覆うように
+        }
     }
 }
 
-enum step{
-    case inputID
-    case inputName
-    case readNFC
-}
-
 #Preview {
-    InputRoomIDView(step: .inputID)
+    //    InputRoomIDView(step: .inputID)
+    ContentView()
 }
