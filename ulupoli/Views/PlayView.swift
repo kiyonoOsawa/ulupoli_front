@@ -6,6 +6,7 @@ struct PlayView: View {
             TimerView()
             TimerCircleView()
         }
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
