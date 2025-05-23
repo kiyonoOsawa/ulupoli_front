@@ -1,10 +1,3 @@
-//
-//  MapView.swift
-//  ulupoli
-//
-//  Created by 大澤清乃 on 2025/05/18.
-//
-
 import SwiftUI
 import MapKit
 import CoreLocation
@@ -19,20 +12,66 @@ struct MapView: View {
     ]
     
     var body: some View {
-        Map(coordinateRegion: $locationManager.region, showsUserLocation: true, annotationItems: otherUsers) { user in
-            MapAnnotation(coordinate: user.coordinate) {
-                VStack {
-                    Image(systemName: "person.circle.fill")
-                        .font(.title)
-                        .foregroundColor(.blue)
-                    Text(user.name)
-                        .font(.title)
-                        .foregroundColor(Color.white)
-                        .cornerRadius(4)
+        ZStack {
+            Map(coordinateRegion: $locationManager.region, showsUserLocation: true, annotationItems: otherUsers) { user in
+                MapAnnotation(coordinate: user.coordinate) {
+                    VStack {
+                        Image(systemName: "person.circle.fill")
+                            .font(.title)
+                            .foregroundColor(.blue)
+                        Text(user.name)
+                            .font(.title)
+                            .foregroundColor(Color.white)
+                            .cornerRadius(4)
+                    }
                 }
             }
+            .edgesIgnoringSafeArea(.all)
+            VStack { // ボタンを垂直方向に配置するためのVStackを追加
+                Spacer() // ボタンを画面下部に寄せる
+                HStack(spacing: 0) { // ボタンを水平方向に配置するためのHStack
+                    Spacer() // ボタンを右に寄せる
+                    // + ボタンは、地図を拡大します。
+                    HStack(spacing: 0) {
+                        Button(action: {
+                            // locationManager.region にアクセスしてspanを更新
+                            let span = MKCoordinateSpan(latitudeDelta: locationManager.region.span.latitudeDelta / 2.0, longitudeDelta: locationManager.region.span.longitudeDelta / 2.0)
+                            locationManager.region.span = span
+                        }) {
+                            Text("+")
+                                .font(.system(size: 16))
+                        }
+                        .padding()
+                        .foregroundColor(.gray)
+                        .font(.caption)
+                        .frame(width: 40, height: 40)
+                        Rectangle()
+                            .frame(width: 1, height: 40)
+                            .foregroundColor(.gray)
+                            .opacity(0.8)
+//                            .background(.blue)
+                        // - ボタンは、地図を縮小します。
+                        Button(action: {
+                            // locationManager.region にアクセスしてspanを更新
+                            let span = MKCoordinateSpan(latitudeDelta: locationManager.region.span.latitudeDelta * 2.0, longitudeDelta: locationManager.region.span.longitudeDelta * 2.0)
+                            locationManager.region.span = span
+                        }) {
+                            Text("-")
+                                .font(.system(size: 18))
+                        }
+                        .padding()
+                        .foregroundColor(.gray)
+                        .font(.caption)
+                        .frame(width: 40, height: 40)
+                        //                    .background(.white)
+                    }
+                    .background(.white)
+                    .cornerRadius(8)
+                    .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 20))
+                }
+                .padding(.bottom, 30) // 下部からの距離
+            }
         }
-        .edgesIgnoringSafeArea(.all)
     }
 }
 
