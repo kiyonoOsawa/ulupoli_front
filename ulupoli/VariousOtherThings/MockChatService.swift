@@ -55,6 +55,7 @@ class MockChatService: ChatServiceProtocol {
     func listenForNewMessages(completion: @escaping (Result<MessageModel, Error>) -> Void) -> AnyCancellable {
         Timer.publish(every: 5.0, on: .main, in: .common)
             .autoconnect()
+            .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self = self else { return }
                 let newMessage = MessageModel(

@@ -59,22 +59,9 @@ struct ChatView: View {
                 // 入力ボックス
                 ChatBox(text: $viewModel.inputText, sendAction: viewModel.sendMessage)
             }
-            .navigationTitle("チャット (Supabase Ready)")
+//            .navigationTitle("チャット (Supabase Ready)")
             .toolbarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        Image(systemName: "arrow.left")
-                            .foregroundColor(.blue)
-                            .frame(width: 40, height: 40)
-                            .background(Color.white)
-                            .clipShape(.capsule)
-                    }
-                }
-            }
             .onAppear {
                 // 画面が表示されたらデータをロードし、リスニングを開始
                 viewModel.loadInitialData()
@@ -98,6 +85,11 @@ struct ChatView: View {
                         .clipShape(.capsule)
                         .padding(.vertical)
                     }
+                }
+                ToolbarItem(placement: .principal) {
+                    Text("チャット画面")
+                        .font(.headline) // フォントも指定可能
+                        .foregroundColor(.white) // ← ここで色を指定！
                 }
             }
         }

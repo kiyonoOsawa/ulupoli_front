@@ -8,7 +8,7 @@ struct ContentView: View {
 //            PlayView()
 //            InputRoomIDView(step: .inputID)
 //            NFCReadView()
-            ChatView()
+            PlayView()
         }
     }
 }

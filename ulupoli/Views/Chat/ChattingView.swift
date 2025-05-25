@@ -6,10 +6,6 @@ struct ChattingView: View {
     let player: ChatPlayerModel
     let isCurrentUser: Bool
     
-//    var isCurrentUser: Bool {
-//        message.sender.id == currentPlayerId
-//    }
-    
     var body: some View {
         HStack {
             if isCurrentUser {
@@ -23,13 +19,13 @@ struct ChattingView: View {
                 if !isCurrentUser {
                     Text(player.name)
                         .font(.caption)
-                        .foregroundColor(Color.grayColor)
+                        .foregroundColor(.white)
                         .padding(.leading, 10)
                 }
                 Text(message.message)
                     .padding(10)
-                    .foregroundColor(isCurrentUser ? .white : .white)
-                    .background(isCurrentUser ? .blue : Color(uiColor: .systemGray5))
+                    .foregroundColor(isCurrentUser ? .white : Color.backColor)
+                    .background(isCurrentUser ? Color.mainColor : Color(uiColor: .systemGray5))
                     .cornerRadius(20)
                 
                 // 送信日時を表示
@@ -46,7 +42,3 @@ struct ChattingView: View {
         .padding(.horizontal)
     }
 }
-
-//#Preview {
-//    ChattingView(message: MessageModel(message: "Hi", sender: <#ChatPlayerModel#>), currentPlayerId: <#UUID#>)
-//}

@@ -14,7 +14,7 @@ struct OthersView: View {
             // AIの名前を表示
             Text("AI")
                 .font(.caption) // フォントサイズを小さくするためのオプションです。
-                .foregroundColor(.black) // テキストの色を黒に設定します。
+                .foregroundColor(Color.grayColor) // テキストの色を黒に設定します。
         }
     }
 }

@@ -1,30 +1,30 @@
 import Foundation
 import Combine
 
-//@MainActor // UI更新はメインスレッドで行うことを保証
+// クラス宣言の @MainActor は外したままにします
 class ChatViewModel: ObservableObject {
     
     @Published var messages: [MessageModel] = []
-    @Published var players: [UUID: ChatPlayerModel] = [:] // IDでプレイヤーを引けるように辞書型に
+    @Published var players: [UUID: ChatPlayerModel] = [:]
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
     @Published var inputText: String = ""
     
-    let currentUserId: UUID // 現在のユーザーIDを保持
+    let currentUserId: UUID
     private let chatService: ChatServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
     init(chatService: ChatServiceProtocol = MockChatService()) {
         self.chatService = chatService
-        // MockChatService から currentPlayer の ID を取得 (本来は認証情報などから)
         if let mockService = chatService as? MockChatService {
             self.currentUserId = mockService.currentPlayer.id
         } else {
-            self.currentUserId = UUID() // フォールバック
+            self.currentUserId = UUID()
         }
     }
     
-    // メッセージと関連プレイヤーをロードする
+    // @MainActor をメソッドに付けつつ、更新箇所でも MainActor.run を使う
+    @MainActor
     func loadInitialData() {
         guard !isLoading else { return }
         isLoading = true
@@ -33,86 +33,97 @@ class ChatViewModel: ObservableObject {
         Task {
             do {
                 let fetchedMessages = try await chatService.fetchMessages()
-                self.messages = fetchedMessages
-                
-                // メッセージから必要なプレイヤーIDを抽出
                 let playerIds = Set(fetchedMessages.map { $0.senderId })
                 let fetchedPlayers = try await chatService.fetchPlayers(ids: Array(playerIds))
                 
-                // プレイヤーを辞書に格納
-                self.players = fetchedPlayers.reduce(into: [:]) { dict, player in
-                    dict[player.id] = player
+                // --- ここで MainActor.run を使って更新を保証 ---
+                await MainActor.run {
+                    self.messages = fetchedMessages
+                    self.players = fetchedPlayers.reduce(into: [:]) { dict, player in
+                        dict[player.id] = player
+                    }
+                    self.isLoading = false
                 }
-                
-                isLoading = false
+                // --- ここまで ---
             } catch {
-                errorMessage = "データの読み込みに失敗しました: \(error.localizedDescription)"
-                isLoading = false
+                // --- ここでも MainActor.run を使う ---
+                await MainActor.run {
+                    self.errorMessage = "データの読み込みに失敗しました: \(error.localizedDescription)"
+                    self.isLoading = false
+                }
+                // --- ここまで ---
             }
         }
     }
     
-    // メッセージを送信する
+    @MainActor
     func sendMessage() {
         let textToSend = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !textToSend.isEmpty else { return }
         
-        let tempMessageId = UUID() // 一時的なID
+        let tempMessageId = UUID()
         let tempMessage = MessageModel(id: tempMessageId, message: textToSend, senderId: currentUserId)
         
-        // UIに即時反映
         messages.append(tempMessage)
         inputText = ""
         
         Task {
             do {
                 try await chatService.sendMessage(textToSend, senderId: currentUserId)
-                // 送信成功時の処理 (例: メッセージの状態を 'sent' にするなど)
-                // 今回はモックなので特に行わない
                 print("送信成功")
-                // 必要であれば、サーバーから返された正式なメッセージで置き換える
             } catch {
-                errorMessage = "メッセージの送信に失敗しました。"
-                // 送信失敗時の処理 (例: メッセージを 'failed' 状態にする、再送ボタンを出すなど)
-                // 今回は一時メッセージを削除する例
-                messages.removeAll { $0.id == tempMessageId }
-                inputText = textToSend // 入力内容を戻す
+                // --- MainActor.run を使う ---
+                await MainActor.run {
+                    self.errorMessage = "メッセージの送信に失敗しました。"
+                    self.messages.removeAll { $0.id == tempMessageId }
+                    self.inputText = textToSend
+                }
+                // --- ここまで ---
             }
         }
     }
     
-    // プレイヤー情報を取得する
     func getPlayer(for id: UUID) -> ChatPlayerModel {
-        return players[id] ?? .unknown // 見つからない場合は '不明' を返す
+        return players[id] ?? .unknown
     }
     
-    // リアルタイム更新のリスニングを開始する
     func startListening() {
         chatService.listenForNewMessages { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let newMessage):
-                // 新しいメッセージが自分の送信したものでなければ追加
-                if !self.messages.contains(where: { $0.id == newMessage.id }) {
-                    self.messages.append(newMessage)
-                    // 新しいプレイヤーがいれば取得・追加
-                    if self.players[newMessage.senderId] == nil {
-                        Task {
-                            do {
-                                let fetchedPlayers = try await self.chatService.fetchPlayers(ids: [newMessage.senderId])
-                                if let newPlayer = fetchedPlayers.first {
-                                    self.players[newPlayer.id] = newPlayer
-                                }
-                            } catch {
-                                print("新規プレイヤー情報の取得に失敗: \(error)")
-                            }
+            // --- Task { @MainActor in ... } を使う ---
+            Task { @MainActor in
+                guard let self = self else { return }
+                switch result {
+                case .success(let newMessage):
+                    if !self.messages.contains(where: { $0.id == newMessage.id }) {
+                        self.messages.append(newMessage) // @MainActor 内なので安全
+                        if self.players[newMessage.senderId] == nil {
+                            self.fetchAndAddPlayer(id: newMessage.senderId) // これも @MainActor
                         }
                     }
+                case .failure(let error):
+                    self.errorMessage = "リアルタイム更新エラー: \(error.localizedDescription)" // @MainActor 内
                 }
-            case .failure(let error):
-                self.errorMessage = "リアルタイム更新エラー: \(error.localizedDescription)"
+            }
+            // --- ここまで ---
+        }
+        .store(in: &cancellables)
+    }
+    
+    @MainActor
+    private func fetchAndAddPlayer(id: UUID) {
+        Task {
+            do {
+                let fetchedPlayers = try await self.chatService.fetchPlayers(ids: [id])
+                // --- MainActor.run を使う (念のため) ---
+                await MainActor.run {
+                    if let newPlayer = fetchedPlayers.first {
+                        self.players[newPlayer.id] = newPlayer
+                    }
+                }
+                // --- ここまで ---
+            } catch {
+                print("新規プレイヤー情報の取得に失敗: \(error)")
             }
         }
-        .store(in: &cancellables) // サブスクリプションを保持
     }
 }

@@ -4,6 +4,7 @@ import CoreLocation
 
 struct MapView: View {
     
+    @Environment(\.dismiss) var dismiss
     @StateObject private var locationManager = LocationManager()
     
     let otherUsers: [UserLocationModel] = [
@@ -27,7 +28,20 @@ struct MapView: View {
                 }
             }
             .edgesIgnoringSafeArea(.all)
-            VStack { // ボタンを垂直方向に配置するためのVStackを追加
+            VStack {
+                HStack {
+                    Button(action: {
+                        dismiss()
+                    }, label: {
+                        Image(systemName: "xmark")
+                            .foregroundColor(Color.backColor)
+                    })
+                    .padding()
+                    .background(.white)
+                    .cornerRadius(20)
+                    Spacer()
+                }
+                .padding()
                 Spacer() // ボタンを画面下部に寄せる
                 HStack(spacing: 0) { // ボタンを水平方向に配置するためのHStack
                     Spacer() // ボタンを右に寄せる
