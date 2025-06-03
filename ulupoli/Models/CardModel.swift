@@ -7,6 +7,7 @@
 
 import Foundation
 
-struct CardModel: Identifiable {
-    let id = UUID()
+struct CardModel: Identifiable, Decodable {
+    var id: Int
+    var default_id: String
 }
