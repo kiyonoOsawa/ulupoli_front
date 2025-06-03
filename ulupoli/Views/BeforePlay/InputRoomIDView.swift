@@ -5,8 +5,8 @@ struct InputRoomIDView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject var viewModel = PlayerViewModel()
     
-    var onCompletion: (Bool) -> Void // Trueなら成功、Falseなら中断など
-    
+    var onFlowCompleteAndDismiss: (Bool) -> Void
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -15,13 +15,14 @@ struct InputRoomIDView: View {
                 VStack(spacing: 24) {
                     TextField("RoomIDを入力", text: $viewModel.roomIDInput)
                         .padding()
+                        .foregroundColor(.white)
                         .frame(width: 360)
                         .overlay(
                             RoundedRectangle(cornerRadius: 4)
                                 .stroke(Color.mainColor, lineWidth: 2)
                         )
                     NavigationLink {
-                        InputNameView(viewModel: viewModel, onCompletion: onCompletion)
+                        InputNameView(viewModel: viewModel, onFlowCompleteAndDismiss: self.onFlowCompleteAndDismiss)
                     } label: {
                         Text("Next")
                             .padding()
@@ -42,7 +43,7 @@ struct InputRoomIDView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("閉じる") {
                         dismiss()
-                        onCompletion(false)
+                        onFlowCompleteAndDismiss(false)
                     }
                     .foregroundColor(.white)
                 }
