@@ -5,7 +5,7 @@ struct InputNameView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject var viewModel = PlayerViewModel()
     
-    var onCompletion: (Bool) -> Void
+    var onFlowCompleteAndDismiss: (Bool) -> Void
     
     var body: some View {
 //        NavigationView {
@@ -14,13 +14,14 @@ struct InputNameView: View {
                 VStack(spacing: 24) {
                     TextField("名前を入力", text: $viewModel.nameInput)
                         .padding()
+                        .foregroundColor(.white)
                         .frame(width: 360)
                         .overlay(
                             RoundedRectangle(cornerRadius: 4)
                                 .stroke(Color.mainColor, lineWidth: 2)
                         )
                     NavigationLink {
-                        NFCReadView(viewModel: viewModel, onCompletion: onCompletion)
+                        NFCReadView(viewModel: viewModel, onFlowCompleteAndDismiss: self.onFlowCompleteAndDismiss)
                     } label: {
                         Text("Next")
                             .padding()

@@ -26,21 +26,20 @@ struct StartView: View {
                     print("ここで画面を閉じた時の判定を行う")
                     if registerNFC {
                         print("NFC読み取りが完了してシートが閉じられました。WaitingViewを表示します。")
-                        showWaitingSheet = false
+//                        showWaitingSheet = false
                         //こちら↓↓が正しいけど開発中のため↑↑
-//                        showWaitingSheet = true
+                        showWaitingSheet = true
                     } else {
                         print("シートが閉じられましたが、NFC読み取りは完了していません。")
-                        showWaitingSheet = true
+//                        showWaitingSheet = true
                         //こちら↓↓が正しいけど開発中のため↑↑
-//                        showWaitingSheet = false
+                        showWaitingSheet = false
                     }
                     
                 }) {
-                    InputRoomIDView(onCompletion: { completedSuccessfully in
-                        // シート内のフローが完了した時にこのクロージャが呼ばれる
-                        // completedSuccessfully はNFCReadViewでtrueに設定される
-                        registerNFC = completedSuccessfully
+                    InputRoomIDView(onFlowCompleteAndDismiss: { didSucceed in
+                        registerNFC = didSucceed
+                        self.showInput = false
                     })
                 }
                 VStack(spacing: 2) {
