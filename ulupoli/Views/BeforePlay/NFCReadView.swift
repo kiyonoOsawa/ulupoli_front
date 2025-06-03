@@ -33,7 +33,9 @@ struct NFCReadView: View {
                         Button("次へ") {
                             // ここでplayerModelにUIDをセットしたり、次の処理へ
                             viewModel.cardIDInput = reader.lastUID ?? ""
-                            viewModel.savePlayer()
+                            Task {
+                                await viewModel.joinRoom()
+                            }
                         }
                         .padding()
                         .frame(width: 340)

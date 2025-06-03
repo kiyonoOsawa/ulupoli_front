@@ -5,9 +5,9 @@ struct WaitingView: View {
     
     @State var showPlayingSheet: Bool = false
     @State var waitingPlayer: [PlayerModel] = [
-        PlayerModel(name: "user1", rool: Int(), status: Int(), room_id: String(), card_id: String(), deleted_at: Date(), created_at: Date(), updated_at: Date()),
-        PlayerModel(name: "user2", rool: Int(), status: Int(), room_id: String(), card_id: String(), deleted_at: Date(), created_at: Date(), updated_at: Date()),
-        PlayerModel(name: "user3", rool: Int(), status: Int(), room_id: String(), card_id: String(), deleted_at: Date(), created_at: Date(), updated_at: Date())
+        PlayerModel(name: "user1", roll: Int(), status: Int(), room_id: Int(), card_id: Int(), deleted_at: Date(), created_at: Date(), updated_at: Date()),
+        PlayerModel(name: "user2", roll: Int(), status: Int(), room_id: Int(), card_id: Int(), deleted_at: Date(), created_at: Date(), updated_at: Date()),
+        PlayerModel(name: "user3", roll: Int(), status: Int(), room_id: Int(), card_id: Int(), deleted_at: Date(), created_at: Date(), updated_at: Date())
     ]
     //開始かどうかの判定
     @State var startStatus: Bool = false

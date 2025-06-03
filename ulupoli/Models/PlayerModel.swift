@@ -7,14 +7,14 @@
 
 import Foundation
 
-struct PlayerModel: Identifiable {
-    let id = UUID()
+struct PlayerModel: Identifiable, Decodable {
+    var id: Int?
     var name: String
-    var rool: Int
+    var roll: Int
     var status: Int
-    var room_id: String
-    var card_id: String
-    var deleted_at: Date
+    var room_id: Int?
+    var card_id: Int?
+    var deleted_at: Date?
     var created_at: Date
     var updated_at: Date
 }
