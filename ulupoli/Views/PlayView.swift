@@ -2,6 +2,8 @@ import SwiftUI
 
 struct PlayView: View {
     @State var showMapSheet: Bool = false
+    @State var showMissionSheet: Bool = false
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -41,7 +43,7 @@ struct PlayView: View {
                     Spacer()
                     HStack {
                         Button(action: {
-                            print("ミッション画面に")
+                            showMissionSheet = true
                         }, label: {
                             HStack {
                                 Image(systemName: "checklist")
@@ -55,6 +57,9 @@ struct PlayView: View {
                         .padding()
                         .background(Color.grayColor)
                         .cornerRadius(12)
+                        .sheet(isPresented: $showMissionSheet){
+                            MissionView()
+                        }
                         Spacer()
                         NavigationLink {
                             ChatView()
