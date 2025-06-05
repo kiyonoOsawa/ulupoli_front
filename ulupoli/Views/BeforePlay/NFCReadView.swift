@@ -38,6 +38,7 @@ struct NFCReadView: View {
                         //                        print("ああ\(showInput)")
                         //                        dismiss()          // 画面を閉じる
                         Task {
+                            print("えええええ")
                             await viewModel.joinRoom()
                         }
                     }
