@@ -77,6 +77,7 @@ struct PlayView: View {
             }
             .toolbar(.hidden, for: .navigationBar)
         }
+        .navigationBarHidden(true)
     }
 }
 
