@@ -32,10 +32,11 @@ class PlayerViewModel: ObservableObject {
         errorMessage = nil
 
         do {
+            print("roomID")
+            print(roomIDInput)
             // STEP A: rooms テーブルから room_random_id が一致する行を検索
             let roomsResponse: PostgrestResponse<[RoomModel]> = try await SupabaseManager.shared.client.from("rooms")
-                .select()                                 // 全カラム取得
-                .eq("room_random_id", value: roomIDInput).limit(1).execute()
+                .select().eq("random_room_id", value: roomIDInput).execute()
             if let matchedRoom = roomsResponse.value.first {
                 // STEP B: players テーブルに「空の Player レコード」を作成
                 let now = Date()
@@ -60,9 +61,11 @@ class PlayerViewModel: ObservableObject {
 //                )
                 let insertResponse: PostgrestResponse<[PlayerModel]> = try await SupabaseManager.shared.client
                     .from("players")
-                    .insert([newPlayer])
+                    .insert(newPlayer)
                     .select()   // 挿入後のレコードを返却
                     .execute()
+                
+                print("player作れた")
                 if let inserted = insertResponse.value.first {
                     // player プロパティに作成済みレコードを保持
                     self.player = inserted
