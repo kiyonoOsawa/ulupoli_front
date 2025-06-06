@@ -69,13 +69,15 @@ class MissionViewModel: NSObject, ObservableObject, NFCTagReaderSessionDelegate 
             let newPlayer = PlayerModel(
                 id: nil, // サーバーDBのIDは不明なのでnil
                 name: "Player (CardID: ...\(String(cardId).suffix(4)))", // 仮の名前
-                roll: 0, // 仮のデータ
+                role: 0, // 仮のデータ
                 status: 1, // 仮のデータ
                 room_id: nil,
                 card_id: cardId, // ★NFCから読み取ったIDを設定
                 deleted_at: nil,
                 created_at: Date(),
-                updated_at: Date()
+                updated_at: Date(),
+                latitude: Double(),
+                longitude: Double()
             )
             
             DispatchQueue.main.async {

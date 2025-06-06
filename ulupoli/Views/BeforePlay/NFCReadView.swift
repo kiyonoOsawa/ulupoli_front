@@ -34,9 +34,9 @@ struct NFCReadView: View {
                     Button("次へ / 完了") { // ボタンのテキストを分かりやすく
                         viewModel.cardIDInput = reader.lastUID ?? ""
                         onFlowCompleteAndDismiss(true)
-                        //                        StartView(showWaitingSheet: true)
-                        //                        print("ああ\(showInput)")
-                        //                        dismiss()          // 画面を閉じる
+                        //userDefaultsを使用して現在使用している自分のカードのuidを保持。キーはmyUID
+                        //取得したい場合には：UserDefaults.standard.string(forKey: "myUID")
+                        UserDefaults.standard.set(reader.lastUID, forKey: "myUID")
                         Task {
                             print("えええええ")
                             await viewModel.joinRoom()
