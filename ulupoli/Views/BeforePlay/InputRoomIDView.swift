@@ -5,6 +5,8 @@ struct InputRoomIDView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject var viewModel = PlayerViewModel()
     
+    @State private var isNameViewActive = false
+    
     var onFlowCompleteAndDismiss: (Bool) -> Void
 
     var body: some View {
@@ -13,6 +15,9 @@ struct InputRoomIDView: View {
                 Color.grayColor.ignoresSafeArea()
                 //            NavigationStack {
                 VStack(spacing: 24) {
+                    Text("RoomIDを入力")
+                        .foregroundColor(.white)
+                        .font(.system(size: 16))
                     TextField("RoomIDを入力", text: $viewModel.roomIDInput)
                         .padding()
                         .foregroundColor(.white)
@@ -21,18 +26,37 @@ struct InputRoomIDView: View {
                             RoundedRectangle(cornerRadius: 4)
                                 .stroke(Color.mainColor, lineWidth: 2)
                         )
-                    NavigationLink {
-                        InputNameView(viewModel: viewModel, onFlowCompleteAndDismiss: self.onFlowCompleteAndDismiss)
-                    } label: {
-                        Text("Next")
-                            .padding()
-                            .frame(width: 360)
-                            .foregroundStyle(.white)
-                            .background(Color.main)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .stroke(Color.mainColor, lineWidth: 2)
-                            )
+                    ZStack {
+                        // (A) これは裏方。UI上には見えず、画面遷移だけを担当
+                        NavigationLink(
+                            destination: InputNameView(viewModel: viewModel, onFlowCompleteAndDismiss: self.onFlowCompleteAndDismiss),
+                            isActive: $isNameViewActive // スイッチと連動
+                        ) {
+                            EmptyView() // 何も表示しない
+                        }
+                        
+                        // (B) これが表舞台。ユーザーが実際にタップするボタン
+                        Button(action: {
+                            // --- ここに実行したい処理を書く ---
+                            // 1. UserDefaultsに保存
+                            UserDefaults.standard.set(viewModel.roomIDInput, forKey: "roomID")
+                            print("RoomID: \(viewModel.roomIDInput) を保存しました。")
+                            
+                            // 2. 処理が終わったら、スイッチをONにして画面遷移を実行
+                            isNameViewActive = true
+                            
+                        }) {
+                            // ボタンの見た目
+                            Text("Next")
+                                .padding()
+                                .frame(width: 360)
+                                .foregroundStyle(.white)
+                                .background(Color.main)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .stroke(Color.mainColor, lineWidth: 2)
+                                )
+                        }
                     }
                 }
             }

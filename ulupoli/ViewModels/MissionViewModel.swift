@@ -9,7 +9,7 @@ class MissionViewModel: NSObject, ObservableObject, NFCTagReaderSessionDelegate 
     @Published var isMissionComplete: Bool = false
     @Published var feedbackMessage: String = "NFCスキャンボタンを押してください"
     //ここどうする？？何人にするかこちらで弄れるようにする？
-    let missionPlayerCount: Int = 5
+    let missionPlayerCount: Int = 2
     private var session: NFCTagReaderSession?
     
     func startNFCScanning() {

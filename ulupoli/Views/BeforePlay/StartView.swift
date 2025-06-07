@@ -5,11 +5,16 @@ struct StartView: View {
     @State var showHowSheet: Bool = false
     @State var showWaitingSheet: Bool = false
     @State var registerNFC: Bool = false
+    @StateObject private var viewModel = PlayerViewModel()
     
     var body: some View {
         ZStack {
             Color.backColor.ignoresSafeArea()
             VStack(spacing: 32) {
+                Image("icon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: 200)
                 Button("ulupoliをはじめる") {
                     showInput = true
                 }
@@ -23,24 +28,33 @@ struct StartView: View {
                         .stroke(Color.main, lineWidth: 3)
                 )
                 .sheet(isPresented: $showInput, onDismiss: {
-                    print("ここで画面を閉じた時の判定を行う")
-                    if registerNFC {
-                        print("NFC読み取りが完了してシートが閉じられました。WaitingViewを表示します。")
-//                        showWaitingSheet = false
-                        //こちら↓↓が正しいけど開発中のため↑↑
-                        showWaitingSheet = true
-                    } else {
-                        print("シートが閉じられましたが、NFC読み取りは完了していません。")
+                        self.showWaitingSheet = true
+//                    print("ここで画面を閉じた時の判定を行う")
+//                    if registerNFC {
+//                        print("NFC読み取りが完了してシートが閉じられました。WaitingViewを表示します。")
+////                        showWaitingSheet = false
+//                        //こちら↓↓が正しいけど開発中のため↑↑
 //                        showWaitingSheet = true
-                        //こちら↓↓が正しいけど開発中のため↑↑
-                        showWaitingSheet = false
-                    }
+//                        Task {
+//                            await viewModel.fetchPlayer()
+//                        }
+//                    } else {
+//                        print("シートが閉じられましたが、NFC読み取りは完了していません。")
+////                        showWaitingSheet = true
+//                        //こちら↓↓が正しいけど開発中のため↑↑
+//                        showWaitingSheet = false
+//                    }
                     
                 }) {
-                    InputRoomIDView(onFlowCompleteAndDismiss: { didSucceed in
-                        registerNFC = didSucceed
+                    // ▼▼▼ ここから修正 ▼▼▼
+                    InputRoomIDView(viewModel: viewModel, onFlowCompleteAndDismiss: { didSucceed in
                         self.showInput = false
                     })
+                    // ▲▲▲ ここまで修正 ▲▲▲
+//                    InputRoomIDView(onFlowCompleteAndDismiss: { didSucceed in
+//                        registerNFC = didSucceed
+//                        self.showInput = false
+//                    })
                 }
                 VStack(spacing: 2) {
                     Button("ulupoliの使い方をしる"){
@@ -58,7 +72,7 @@ struct StartView: View {
             }
         }
         .fullScreenCover(isPresented: $showWaitingSheet) {
-            WaitingView()
+            WaitingView(viewModel: viewModel)
         }
     }
 }

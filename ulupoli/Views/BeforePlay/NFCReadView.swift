@@ -32,16 +32,28 @@ struct NFCReadView: View {
                     .cornerRadius(6)
                 } else {
                     Button("次へ / 完了") { // ボタンのテキストを分かりやすく
-                        viewModel.cardIDInput = reader.lastUID ?? ""
-                        onFlowCompleteAndDismiss(true)
-                        //userDefaultsを使用して現在使用している自分のカードのuidを保持。キーはmyUID
-                        //取得したい場合には：UserDefaults.standard.string(forKey: "myUID")
-                        UserDefaults.standard.set(reader.lastUID, forKey: "myUID")
                         Task {
+//                            viewModel.cardIDInput = reader.lastUID ?? ""
+//                            onFlowCompleteAndDismiss(true)
+                            //userDefaultsを使用して現在使用している自分のカードのuidを保持。キーはmyUID
+                            //取得したい場合には：UserDefaults.standard.string(forKey: "myUID")
+//                            UserDefaults.standard.set(reader.lastUID, forKey: "myUID")
                             print("えええええ")
-                            await viewModel.joinRoom()
+                            do {
+                                viewModel.cardIDInput = reader.lastUID ?? ""
+                                UserDefaults.standard.set(reader.lastUID, forKey: "myUID")
+                                // ViewModelの登録処理をawaitで待つ
+                                try await viewModel.joinRoom()
+                                // 成功したら完了ハンドラを呼ぶ
+                                onFlowCompleteAndDismiss(true)
+                            } catch {
+                                // ViewModel内でerrorMessageはセット済み
+                                // ここでは何もしなくても良い
+                                print("joinRoomでエラーが発生しました")
+                            }
                         }
                     }
+                    .disabled(viewModel.isLoading)// 処理中はボタンを無効化
                     .padding()
                     .frame(width: 340)
                     .foregroundStyle(.white)
@@ -60,10 +72,5 @@ struct NFCReadView: View {
                 // ここでは dismiss() を呼び出さない
             }
         }
-        // .onAppear { // 最初のスキャンを促す場合
-        //     if reader.lastUID == nil || reader.lastUID!.isEmpty {
-        //         reader.beginScanning() // 画面表示時に自動でスキャン開始する場合
-        //     }
-        // }
     }
 }

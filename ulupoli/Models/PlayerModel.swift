@@ -5,8 +5,8 @@ struct PlayerModel: Identifiable, Decodable, Equatable {
     
     var id: Int?
     var name: String
-    var role: Int
-    var status: Int
+    var role: Int?
+    var status: Int?
     var room_id: Int?
     var card_id: Int?
     var deleted_at: Date?

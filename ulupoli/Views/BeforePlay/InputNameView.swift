@@ -12,6 +12,9 @@ struct InputNameView: View {
             ZStack {
                 Color.grayColor.ignoresSafeArea()
                 VStack(spacing: 24) {
+                    Text("名前を入力")
+                        .foregroundColor(.white)
+                        .font(.system(size: 16))
                     TextField("名前を入力", text: $viewModel.nameInput)
                         .padding()
                         .foregroundColor(.white)
