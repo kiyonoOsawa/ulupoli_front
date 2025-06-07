@@ -18,7 +18,7 @@ struct MapView: View {
                 MapAnnotation(coordinate: user.coordinate) {
                     VStack {
                         Image(systemName: "person.circle.fill")
-                            .font(.system(size: 90))
+                            .font(.system(size: 20))
                             .padding()
                             .foregroundColor(.blue)
                         Text(user.name)

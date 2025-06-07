@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Supabase
 
 struct InsertPlayerModel: Encodable {
@@ -19,67 +20,76 @@ class PlayerViewModel: ObservableObject {
 
     
     @Published var player: PlayerModel?
+    @Published var room: RoomModel?
+    private let playerRepository = PlayerRepository.shared
     
     //スタート前の諸々の処理系(roomID playerのname cardID 待機室入室までの処理)
     @MainActor
-    func joinRoom() async {
-        // すでにルーム ID が空白だったら弾く
-        if roomIDInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            errorMessage = "ルームIDを入力してください"
+    func joinRoom() async throws {
+        guard !isLoading else {
+            print("joinRoom is already in progress. Skipping.")
             return
         }
+        // 入力チェック
+        if roomIDInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let error = "ルームIDを入力してください"
+            self.errorMessage = error
+            // 簡易的なエラーをスロー
+            throw NSError(domain: "PlayerViewModel", code: 400, userInfo: [NSLocalizedDescriptionKey: error])
+        }
+        
         isLoading = true
         errorMessage = nil
-
+        
         do {
-            print("roomID")
-            print(roomIDInput)
             // STEP A: rooms テーブルから room_random_id が一致する行を検索
             let roomsResponse: PostgrestResponse<[RoomModel]> = try await SupabaseManager.shared.client.from("rooms")
                 .select().eq("random_room_id", value: roomIDInput).execute()
-            if let matchedRoom = roomsResponse.value.first {
-                // STEP B: players テーブルに「空の Player レコード」を作成
-                let now = Date()
-                let cardResponse: PostgrestResponse<[CardModel]> = try await SupabaseManager.shared.client.from("cards").select().eq("default_id", value: cardIDInput).execute()
-                guard let matchedCard = cardResponse.value.first else {
-                    self.errorMessage = "該当するカードが見つかりません"
-                    isLoading = false
-                    return
-                }
-
-                let newPlayer = InsertPlayerModel(name: nameInput, status: 1,room_id: matchedRoom.id, card_id: matchedCard.id,created_at: now, updated_at: now)
-//                let newPlayer = PlayerModel(
-//                    id: nil,
-//                    name: "",                       // 名前は未入力なので空文字
-//                    roll: 0,
-//                    status: 0,
-//                    room_id: matchedRoom.id,          // 取得した rooms.id をセット
-//                    card_id: nil,                   // NFC カードはまだ未スキャン
-//                    deleted_at: nil,
-//                    created_at: now,
-//                    updated_at: now
-//                )
-                let insertResponse: PostgrestResponse<[PlayerModel]> = try await SupabaseManager.shared.client
-                    .from("players")
-                    .insert(newPlayer)
-                    .select()   // 挿入後のレコードを返却
-                    .execute()
-                
-                print("player作れた")
-                if let inserted = insertResponse.value.first {
-                    // player プロパティに作成済みレコードを保持
-                    self.player = inserted
-                } else {
-                    self.errorMessage = "プレイヤーの作成に失敗しました"
-                }
-            } else {
-                // 該当ルームなし
-                self.errorMessage = "該当するルームが見つかりません"
+            
+            guard let matchedRoom = roomsResponse.value.first else {
+                let error = "該当するルームが見つかりません"
+                self.errorMessage = error
+                self.isLoading = false
+                throw NSError(domain: "PlayerViewModel", code: 404, userInfo: [NSLocalizedDescriptionKey: error])
             }
+            
+            // STEP B: cards テーブルからカード情報を検索
+            let cardResponse: PostgrestResponse<[CardModel]> = try await SupabaseManager.shared.client.from("cards").select().eq("default_id", value: cardIDInput).execute()
+            
+            guard let matchedCard = cardResponse.value.first else {
+                let error = "該当するカードが見つかりません"
+                self.errorMessage = error
+                self.isLoading = false
+                throw NSError(domain: "PlayerViewModel", code: 404, userInfo: [NSLocalizedDescriptionKey: error])
+            }
+            
+            // STEP C: players テーブルに新しいプレイヤーを挿入
+            let now = Date()
+            let newPlayer = InsertPlayerModel(name: nameInput, status: 1, room_id: matchedRoom.id, card_id: matchedCard.id, created_at: now, updated_at: now)
+            
+            let insertResponse: PostgrestResponse<[PlayerModel]> = try await SupabaseManager.shared.client
+                .from("players")
+                .insert(newPlayer)
+                .select()   // ★ 挿入したレコードを返してもらう
+                .execute()
+            
+            if let insertedPlayer = insertResponse.value.first {
+                // ★ 成功！挿入されたプレイヤー情報を self.player に格納する
+                self.player = insertedPlayer
+                print("プレイヤー作成成功: \(insertedPlayer.name)")
+            } else {
+                let error = "プレイヤーの作成に失敗しました"
+                self.errorMessage = error
+                throw NSError(domain: "PlayerViewModel", code: 500, userInfo: [NSLocalizedDescriptionKey: error])
+            }
+            
         } catch {
+            // Supabaseからのエラーなどをキャッチ
             self.errorMessage = error.localizedDescription
+            self.isLoading = false
+            throw error // エラーを再スローして呼び出し元に伝える
         }
-
+        
         isLoading = false
     }
     
@@ -114,19 +124,47 @@ class PlayerViewModel: ObservableObject {
         }
     }
 
+    func fetchPlayerDataAfterNFC() {
+        Task {
+            await fetchPlayerData() // 既存のデータ取得ロジックを呼び出す
+        }
+    }
     
-//    func savePlayer() {
-//        let now = Date()
-//        player = PlayerModel(
-//            name: nameInput, // 必要に応じて変更
-//            rool: 0,
-//            status: 0,
-//            room_id: roomIDInput,
-//            card_id: cardIDInput,
-//            deleted_at: now,
-//            created_at: now,
-//            updated_at: now
-//        )
-//        print("ちゃんとできてる？\(player)")
-//    }
+    func fetchPlayerData() async { // メソッド名をより汎用的に変更（任意）
+        self.isLoading = true
+        self.errorMessage = nil
+        self.player = nil // 前回表示したデータをクリア
+        self.room = nil   // 前回表示したデータをクリア
+        
+        guard let myDefaultID = UserDefaults.standard.string(forKey: "userDefaultID") else {
+            self.errorMessage = "ログイン情報が見つかりません。"
+            self.isLoading = false
+            return
+        }
+        
+        do {
+            // --- 最初にプレイヤー情報を取得 ---
+            let fetchedPlayer = try await playerRepository.fetchMyPlayer(byDefaultID: myDefaultID)
+            self.player = fetchedPlayer
+            
+            // --- 次に、取得したプレイヤーのroom_idを使ってルーム情報を取得 ---
+            if let roomID = fetchedPlayer?.room_id {
+                let fetchedRoom = try await playerRepository.fetchRoomData(byRoomID: roomID)
+                self.room = fetchedRoom
+            } else {
+                // プレイヤーが見つからない、またはルームに所属していない
+                self.errorMessage = "ルーム情報が見つかりませんでした。"
+            }
+            
+        } catch {
+            self.errorMessage = "データ取得エラー: \(error.localizedDescription)"
+        }
+        
+        self.isLoading = false
+    }
+    
+    func fetchRoomID() -> String {
+        let foundID = UserDefaults.standard.string(forKey: "roomID") ?? ""
+        return foundID
+    }
 }

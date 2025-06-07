@@ -4,59 +4,69 @@ import Combine
 struct WaitingView: View {
     
     @State var showPlayingSheet: Bool = false
-//    @State var waitingPlayer: [PlayerModel] = [
-//        PlayerModel(name: "user1", roll: Int(), status: Int(), room_id: Int(), card_id: Int(), deleted_at: Date(), created_at: Date(), updated_at: Date()),
-//        PlayerModel(name: "user2", roll: Int(), status: Int(), room_id: Int(), card_id: Int(), deleted_at: Date(), created_at: Date(), updated_at: Date()),
-//        PlayerModel(name: "user3", roll: Int(), status: Int(), room_id: Int(), card_id: Int(), deleted_at: Date(), created_at: Date(), updated_at: Date())
-//    ]
     //開始かどうかの判定
     @State var startStatus: Bool = false
+    @ObservedObject var viewModel: PlayerViewModel
     
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.backColor.ignoresSafeArea()
                 VStack(spacing: 16) {
-                    Text("Waiting Room")
-                        .font(.title)
-                        .foregroundColor(.white)
-                    
-                    VStack {
+                    if viewModel.isLoading {
+                        ProgressView("データを読み込んでいます...")
+                    } else if let player = viewModel.player {
                         Text("ルームID")
                             .foregroundColor(.white)
                         HStack {
-                            Text("AAAAAAA")
-                                .font(.title)
-                                .foregroundColor(Color.mainColor)
-                            Button(action: {
-                                
-                            }, label: {
-                                Image(systemName: "doc.on.doc")
-                                    .foregroundColor(.white)
-                            })
-                        }
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.grayColor)
-                    .cornerRadius(12)
-                    
-//                    List {
-//                        ForEach(waitingPlayer) { player in
-//                            HStack(spacing: 40) {
-//                                Image(systemName: "person.circle")
-//                                    .foregroundColor(Color.main)
-//                                Text(player.name)
-//                                    .foregroundColor(.white)
+//                            if let room = viewModel.room {
+                            Text(viewModel.fetchRoomID())
+                                    .font(.title)
+                                    .foregroundColor(Color.mainColor)
+                                Button(action: {
+                                    
+                                }, label: {
+                                    Image(systemName: "doc.on.doc")
+                                        .foregroundColor(.white)
+                                })
 //                            }
-//                            .listRowBackground(Color.grayColor)
-//                            .padding(8)
-//                        }
-//                    }
-//                    .frame(maxWidth: .infinity)
-//                    .background(BackGroundView())
-//                    .cornerRadius(20)
-//                    .listStyle(.plain)
+                        }
+                        Text(player.name)
+                            .font(.title)
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.grayColor)
+                            .cornerRadius(12)
+                        Spacer()
+                        
+                    } else if let errorMessage = viewModel.errorMessage {
+                        Text("エラー")
+                            .font(.largeTitle)
+                            .foregroundColor(.red)
+                        Text(errorMessage)
+                            .multilineTextAlignment(.center)
+                    }
+//                    Text
+
+                        
+                    
+                    //                    List {
+                    //                        ForEach(waitingPlayer) { player in
+                    //                            HStack(spacing: 40) {
+                    //                                Image(systemName: "person.circle")
+                    //                                    .foregroundColor(Color.main)
+                    //                                Text(player.name)
+                    //                                    .foregroundColor(.white)
+                    //                            }
+                    //                            .listRowBackground(Color.grayColor)
+                    //                            .padding(8)
+                    //                        }
+                    //                    }
+                    //                    .frame(maxWidth: .infinity)
+                    //                    .background(BackGroundView())
+                    //                    .cornerRadius(20)
+                    //                    .listStyle(.plain)
                     
                     //ここはテスト用！
                     Button("ステータスを変更") {
@@ -76,15 +86,17 @@ struct WaitingView: View {
                         }
                     } else {
                         HStack {
-                            ProgressView() // ① デフォルトのアクティビティインジケータ
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white)) // ② 色を白に
-                                .scaleEffect(1.0) // ③ サイズを大きくする (任意)
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(1.0)
                             Text("運営の開始をお待ちください")
                                 .padding()
                                 .opacity(0.6)
-                                
                         }
                         .frame(maxWidth: .infinity)
+                        // ★★★ 最小の高さを指定してレイアウトを安定させる ★★★
+                        .frame(minHeight: 48) // 例えばボタンと同じくらいの高さを確保
+                        // ★★★ ここまで追加 ★★★
                         .foregroundColor(.white)
                         .background(Color.grayColor)
                         .cornerRadius(12)
@@ -97,5 +109,5 @@ struct WaitingView: View {
 }
 
 #Preview {
-    WaitingView()
+    WaitingView(viewModel: PlayerViewModel())
 }
